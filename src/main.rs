@@ -17,15 +17,21 @@ async fn run() -> Result<(), DbErr> {
 
     let res = Bakery::insert(happy_bakery).exec(&db).await.unwrap();
 
-    let john = chef::ActiveModel {
-        name: ActiveValue::Set("John".to_owned()),
-        bakery_id: ActiveValue::Set(res.last_insert_id),
-        ..Default::default()
-    };
+    for chef_name in ["Jolie", "Charles", "Madeleine", "Frederic"] {
+        let chef = chef::ActiveModel {
+            name: ActiveValue::Set(chef_name.to_owned()),
+            bakery_id: ActiveValue::Set(res.last_insert_id),
+            contact_details: ActiveValue::Set("{}".into()),
+            ..Default::default()
+        };
+        Chef::insert(chef).exec(&db).await?;
+    }
 
-    let _res = Chef::insert(john).exec(&db).await.unwrap();
-
-    let bakery = Bakery::find_by_id(res.last_insert_id).one(&db).await;
+    let bakery = Bakery::find_by_id(res.last_insert_id)
+        .find_with_related(Chef)
+        .all(&db)
+        .await
+        .unwrap();
     println!("{:#?}", bakery);
 
     Ok(())
