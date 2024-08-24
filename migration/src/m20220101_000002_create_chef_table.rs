@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Chef::Id))
                     .col(string(Chef::Name))
-                    .col(json(Chef::ContactDetails))
+                    .col(json_null(Chef::ContactDetails))
                     .col(integer(Chef::BakeryId))
                     .foreign_key(
                         ForeignKey::create()

@@ -15,7 +15,18 @@ async fn run() -> Result<(), DbErr> {
         ..Default::default()
     };
 
-    let _res = Bakery::insert(happy_bakery).exec(&db).await;
+    let res = Bakery::insert(happy_bakery).exec(&db).await.unwrap();
+
+    let john = chef::ActiveModel {
+        name: ActiveValue::Set("John".to_owned()),
+        bakery_id: ActiveValue::Set(res.last_insert_id),
+        ..Default::default()
+    };
+
+    let _res = Chef::insert(john).exec(&db).await.unwrap();
+
+    let bakery = Bakery::find_by_id(res.last_insert_id).one(&db).await;
+    println!("{:#?}", bakery);
 
     Ok(())
 }
