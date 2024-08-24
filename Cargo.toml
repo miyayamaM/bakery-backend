@@ -1,6 +1,9 @@
 [package]
+edition = "2021"
 name = "bakery-backend"
 version = "0.1.0"
-edition = "2021"
 
 [dependencies]
+futures = "0.3.3"
+sea-orm = {version = "1.0.0", features = ["sqlx-postgres", "runtime-tokio-native-tls", "macros"]}
+tokio = {version = "1.39", features = ["full"]}
