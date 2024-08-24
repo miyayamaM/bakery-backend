@@ -3,4 +3,6 @@
 pub mod prelude;
 
 pub mod bakery;
+pub mod bread;
+pub mod bread_sale;
 pub mod chef;

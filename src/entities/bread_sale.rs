@@ -3,13 +3,12 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "chef")]
+#[sea_orm(table_name = "bread_sale")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub name: String,
-    pub contact_details: Option<Json>,
     pub bakery_id: i32,
+    pub bread_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -22,11 +21,25 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Bakery,
+    #[sea_orm(
+        belongs_to = "super::bread::Entity",
+        from = "Column::BreadId",
+        to = "super::bread::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Bread,
 }
 
 impl Related<super::bakery::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Bakery.def()
+    }
+}
+
+impl Related<super::bread::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Bread.def()
     }
 }
 
