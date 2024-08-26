@@ -32,4 +32,14 @@ impl Related<super::chef::Entity> for Entity {
     }
 }
 
+impl Related<super::bread::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::bread_sale::Relation::Bread.def()
+    }
+
+    fn via() -> Option<RelationDef> {
+        Some(super::bread_sale::Relation::Bakery.def().rev())
+    }
+}
+
 impl ActiveModelBehavior for ActiveModel {}

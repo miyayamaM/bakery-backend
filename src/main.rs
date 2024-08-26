@@ -17,18 +17,23 @@ async fn run() -> Result<(), DbErr> {
 
     let res = Bakery::insert(happy_bakery).exec(&db).await.unwrap();
 
-    for chef_name in ["Jolie", "Charles", "Madeleine", "Frederic"] {
-        let chef = chef::ActiveModel {
-            name: ActiveValue::Set(chef_name.to_owned()),
-            bakery_id: ActiveValue::Set(res.last_insert_id),
-            contact_details: ActiveValue::Set("{}".into()),
+    for bread_name in ["フランスパン", "あんぱん", "クイニーアマン"] {
+        let bread = bread::ActiveModel {
+            name: ActiveValue::Set(bread_name.to_owned()),
+            price: ActiveValue::Set(100.to_string()),
             ..Default::default()
         };
-        Chef::insert(chef).exec(&db).await?;
+        let bread_res = Bread::insert(bread).exec(&db).await?;
+        let breadsale = bread_sale::ActiveModel {
+            bakery_id: ActiveValue::Set(res.last_insert_id),
+            bread_id: ActiveValue::Set(bread_res.last_insert_id),
+            ..Default::default()
+        };
+        let _res = BreadSale::insert(breadsale).exec(&db).await?;
     }
 
     let bakery = Bakery::find_by_id(res.last_insert_id)
-        .find_with_related(Chef)
+        .find_with_related(Bread)
         .all(&db)
         .await
         .unwrap();
