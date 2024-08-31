@@ -8,7 +8,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
-    pub price: String,
+    pub price: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -18,7 +18,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Bread::Id))
                     .col(string(Bread::Name))
-                    .col(string(Bread::Price))
+                    .col(integer(Bread::Price))
                     .to_owned(),
             )
             .await
