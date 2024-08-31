@@ -1,45 +1,31 @@
+use factories::{
+    bakery_factory::BakeryFactory, bread_factory::BreadFactory,
+    bread_sale_factory::BreadSaleFactory, chef_factory::ChefFactory,
+};
 use futures::executor::block_on;
-use sea_orm::{ActiveValue, Database, DbErr, EntityTrait};
+use sea_orm::{Database, DbErr, EntityTrait};
 
 mod entities;
+mod factories;
 
 use entities::{prelude::*, *};
-use sea_orm_active_enums::EmploymentStatus;
 
 const DATABASE_URL: &str = "postgres://postgres:postgres@127.0.0.1/bakery_backend";
 async fn run() -> Result<(), DbErr> {
     let db = Database::connect(DATABASE_URL).await?;
 
-    let happy_bakery = bakery::ActiveModel {
-        name: ActiveValue::Set("Happy Bakery".to_owned()),
-        profit_margin: ActiveValue::Set(0.0),
-        ..Default::default()
-    };
+    let happy_bakery = BakeryFactory::create();
 
     let res = Bakery::insert(happy_bakery).exec(&db).await.unwrap();
 
-    let chef = chef::ActiveModel {
-        name: ActiveValue::Set("Manu".into()),
-        contact_details: ActiveValue::Set(Some("{}".into())),
-        bakery_id: ActiveValue::Set(res.last_insert_id),
-        employment_status: ActiveValue::Set(Some(EmploymentStatus::FullTime)),
-        ..Default::default()
-    };
+    let chef = ChefFactory::create(&res.last_insert_id);
 
     Chef::insert(chef).exec(&db).await.unwrap();
 
-    for bread_name in ["フランスパン", "あんぱん", "クイニーアマン"] {
-        let bread = bread::ActiveModel {
-            name: ActiveValue::Set(bread_name.to_owned()),
-            price: ActiveValue::Set(100.to_string()),
-            ..Default::default()
-        };
+    for _ in 0..=3 {
+        let bread = BreadFactory::create();
         let bread_res = Bread::insert(bread).exec(&db).await?;
-        let breadsale = bread_sale::ActiveModel {
-            bakery_id: ActiveValue::Set(res.last_insert_id),
-            bread_id: ActiveValue::Set(bread_res.last_insert_id),
-            ..Default::default()
-        };
+        let breadsale = BreadSaleFactory::create(&res.last_insert_id, &bread_res.last_insert_id);
         let _res = BreadSale::insert(breadsale).exec(&db).await?;
     }
 
