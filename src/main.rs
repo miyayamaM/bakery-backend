@@ -14,22 +14,15 @@ const DATABASE_URL: &str = "postgres://postgres:postgres@127.0.0.1/bakery_backen
 async fn run() -> Result<(), DbErr> {
     let db = Database::connect(DATABASE_URL).await?;
 
-    let happy_bakery = BakeryFactory::create();
-
-    let res = Bakery::insert(happy_bakery).exec(&db).await.unwrap();
-
-    let chef = ChefFactory::create(&res.last_insert_id);
-
-    Chef::insert(chef).exec(&db).await.unwrap();
+    let bakery_id = BakeryFactory::create(&db).await;
+    let _chef_id = ChefFactory::create(&db, &bakery_id).await;
 
     for _ in 0..=3 {
-        let bread = BreadFactory::create();
-        let bread_res = Bread::insert(bread).exec(&db).await?;
-        let breadsale = BreadSaleFactory::create(&res.last_insert_id, &bread_res.last_insert_id);
-        let _res = BreadSale::insert(breadsale).exec(&db).await?;
+        let bread_id = BreadFactory::create(&db).await;
+        let _breadsale = BreadSaleFactory::create(&db, &bakery_id, &bread_id).await;
     }
 
-    let bakery = Bakery::find_by_id(res.last_insert_id)
+    let bakery = Bakery::find_by_id(bakery_id)
         .find_with_related(Bread)
         .all(&db)
         .await
