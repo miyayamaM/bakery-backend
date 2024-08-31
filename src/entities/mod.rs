@@ -6,3 +6,4 @@ pub mod bakery;
 pub mod bread;
 pub mod bread_sale;
 pub mod chef;
+pub mod sea_orm_active_enums;
