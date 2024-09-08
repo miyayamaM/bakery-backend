@@ -1,7 +1,6 @@
 use factories::bakery_factory::BakeryFactory;
 use futures::executor::block_on;
-use sea_orm::{ColumnTrait, Database, DbErr, EntityTrait, LoaderTrait, QueryFilter};
-
+use sea_orm::{ColumnTrait, Database, DbErr, EntityTrait, QueryFilter};
 mod entities;
 mod factories;
 
@@ -13,17 +12,54 @@ async fn run() -> Result<(), DbErr> {
 
     let _bakery_id = BakeryFactory::create(&db).await;
 
-    let bakeries: Vec<bakery::Model> = Bakery::find()
-        .filter(bakery::Column::ProfitMargin.lte(0.2))
+    let bakeries: Vec<(bakery::Model, Vec<bread::Model>)> = Bakery::find()
+        .find_with_related(Bread)
+        .filter(bread::Column::Name.eq("メロンパン"))
         .all(&db)
         .await
         .unwrap();
 
-    println!("first: {:#?}", &bakeries);
+    println!("メロンパンを売っているパン屋: {:#?}", &bakeries);
 
-    let breads: Vec<Vec<bread::Model>> = bakeries.load_many_to_many(Bread, BreadSale, &db).await?;
+    // let bakeries: Vec<(bakery::Model, Vec<bread::Model>)> = Bakery::find()
+    //     .find_with_related(Bread)
+    //     .filter(
+    //         Condition::all().add(
+    //             Expr::exists(
+    //                 Bread::find()
+    //                     .filter(bread::Column::Price.gt(1000))
+    //                     .into_query(),
+    //             )
+    //             .not(),
+    //         ),
+    //     )
+    //     .all(&db)
+    //     .await
+    //     .unwrap();
 
-    println!("second: {:#?}", &breads);
+    // サブクエリを作成: 高価なパン (価格 > 1000) を持つパン屋の ID を探す
+    let bakery_ids_selling_pricy_bread: Vec<i32> = Bread::find()
+        .find_with_related(Bakery)
+        .filter(bread::Column::Price.gt(1000))
+        .all(&db)
+        .await
+        .unwrap()
+        .into_iter()
+        .flat_map(|(_bread, bakeries)| bakeries.into_iter().map(|bakery| bakery.id))
+        .collect();
+
+    // メインクエリ: 高価なパンが存在しないパン屋を取得
+    let bakeries = Bakery::find()
+        .filter(bakery::Column::Id.is_not_in(bakery_ids_selling_pricy_bread))
+        .all(&db)
+        .await
+        .unwrap();
+
+    println!(
+        "すべての商品が1000円未満のbakery（商品がないパン屋も含む）: {:#?}",
+        &bakeries
+    );
+
     Ok(())
 }
 

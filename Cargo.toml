@@ -6,5 +6,5 @@ version = "0.1.0"
 [dependencies]
 fake = "2.9"
 futures = "0.3.3"
-sea-orm = {version = "1.0.0", features = ["sqlx-postgres", "runtime-tokio-native-tls", "macros"]}
+sea-orm = {version = "1.0.0", features = ["sqlx-postgres", "runtime-tokio-native-tls", "macros", "debug-print"]}
 tokio = {version = "1", features = ["full"]}
